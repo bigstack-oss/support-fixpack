@@ -1,0 +1,9 @@
+provider_installation {
+  filesystem_mirror {
+    path    = "/var/lib/terraform/patched-registry"
+    include = ["*/*"]
+  }
+  direct {
+    exclude = ["*/*"]
+  }
+}
