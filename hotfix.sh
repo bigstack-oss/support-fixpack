@@ -52,9 +52,7 @@ done
 echo "---------------------------------------"
 echo "update appctl"
 cp appctl /usr/local/bin/appctl
-cubectl node rsync /usr/local/bin/appctl
-cubectl node exec -p -- git add /usr/local/bin/appctl
-cubectl node exec -p -- hex_sdk git_push "sop fix for the appctl for openpgp issue"
+cubectl node -r control rsync /usr/local/bin/appctl
 
 echo "---------------------------------------"
 echo "fix terraform"
