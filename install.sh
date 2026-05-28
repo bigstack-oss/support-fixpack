@@ -14,6 +14,8 @@ else
     # 2. 複製 ext-* 工具
     echo "[INFO] Copying ext-* tools to /usr/local/bin..."
     cp ./ext-* /usr/local/bin/
+    git add /usr/local/bin/ext-*
+    hex_sdk git_push "Add support-ext-pack"
     
     # 3. update flavors
     echo "[INFO] Update OPSTK flavor"
@@ -57,13 +59,13 @@ else
     # 4. Override number of enabled pcie ports & enable swtpm for libvirt
     echo "[INFO] Override number of enabled pcie ports & enable swtpm for libvirt"
     mkdir -p /etc/nova/nova.d/
-    cp ./custom-nova.conf /etc/nova/nova.d/custom.conf
+    cp ./override/custom-nova.conf /etc/nova/nova.d/custom.conf
     cubectl node -r compute rsync /etc/nova/nova.d/custom.conf
     cubectl node -r compute exec -p "hex_config restart_nova"
 
     # 5. update rabbitmq configuration
     mkdir -p /etc/systemd/system/rabbitmq-server.service.d
-    cp ./rabbitmq-custom.conf /etc/systemd/system/rabbitmq-server.service.d/custom.conf
+    cp ./override/rabbitmq-custom.conf /etc/systemd/system/rabbitmq-server.service.d/custom.conf
     cubectl node -r control rsync /etc/systemd/system/rabbitmq-server.service.d/custom.conf
     cubectl node -r control exec -p "systemctl daemon-reload"
     cubectl node -r control exec -p "systemctl restart rabbitmq-server"
