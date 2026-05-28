@@ -56,12 +56,19 @@ else
 
     # 4. Override number of enabled pcie ports & enable swtpm for libvirt
     echo "[INFO] Override number of enabled pcie ports & enable swtpm for libvirt"
-    cubectl node exec -p "mkdir -p /etc/nova/nova.d/"
-    cp ./custom.conf /etc/nova/nova.d/
+    mkdir -p /etc/nova/nova.d/
+    cp ./custom-nova.conf /etc/nova/nova.d/custom.conf
     cubectl node -r compute rsync /etc/nova/nova.d/custom.conf
     cubectl node -r compute exec -p "hex_config restart_nova"
 
-    # 5. Create marker file to indicate the installation is done
+    # 5. update rabbitmq configuration
+    mkdir -p /etc/systemd/system/rabbitmq-server.service.d
+    cp ./rabbitmq-custom.conf /etc/systemd/system/rabbitmq-server.service.d/custom.conf
+    cubectl node -r control rsync /etc/systemd/system/rabbitmq-server.service.d/custom.conf
+    cubectl node -r control exec -p "systemctl daemon-reload"
+    cubectl node -r control exec -p "systemctl restart rabbitmq-server"
+
+    # 6. Create marker file to indicate the installation is done
     echo "[INFO] Marking installation as done..." > /etc/appliance/state/install_support_ext_pack_done
     cubectl node -r control rsync /etc/appliance/state/install_support_ext_pack_done
 fi
