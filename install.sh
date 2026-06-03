@@ -65,7 +65,7 @@ else
 
     # 5. update rabbitmq configuration
     mkdir -p /etc/systemd/system/rabbitmq-server.service.d
-    cp ./override/rabbitmq-custom.conf /etc/systemd/system/rabbitmq-server.service.d/custom.conf
+    cp ./override/custom-rabbitmq.conf /etc/systemd/system/rabbitmq-server.service.d/custom.conf
     cubectl node -r control rsync /etc/systemd/system/rabbitmq-server.service.d/custom.conf
     cubectl node -r control exec -p "systemctl daemon-reload"
     cubectl node -r control exec -p "systemctl restart rabbitmq-server"
