@@ -70,7 +70,12 @@ else
     cubectl node -r control exec -p "systemctl daemon-reload"
     cubectl node -r control exec -p "systemctl restart rabbitmq-server"
 
-    # 6. Create marker file to indicate the installation is done
+    # 6. update rabbitmq configuration
+    sed -i 's/os_type=windows/os_type=windows --property hw_disk_bus=virtio/g' /usr/lib/hex_sdk/modules/sdk_os.sh
+    git add /usr/lib/hex_sdk/modules/sdk_os.sh
+    hex_sdk git_push "Fix missing virtio disk bus property for windows image"
+
+    # 7. Create marker file to indicate the installation is done
     echo "[INFO] Marking installation as done..." > /etc/appliance/state/install_support_ext_pack_done
     cubectl node -r control rsync /etc/appliance/state/install_support_ext_pack_done
 fi

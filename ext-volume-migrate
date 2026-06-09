@@ -187,8 +187,7 @@ cinder image-metadata "$VOL_NAME" set \
   hw_machine_type=q35 \
   hw_scsi_model=virtio-scsi \
   hw_vif_model=virtio \
-  hw_input_bus=virtio \
-  hw_disk_bus=virtio
+  hw_input_bus=virtio 
 
 if [[ -f "$XML" && $(grep -c "<os firmware='efi'" "$XML") -gt 0 ]]; then
     cinder image-metadata "$VOL_NAME" set hw_firmware_type=uefi os_secure_boot=optional
@@ -198,8 +197,10 @@ fi
 
 if [[ -f "$XML" && $(grep -ci "microsoft" "$XML") -gt 0 ]]; then
     cinder image-metadata "$VOL_NAME" set os_type=windows
+    cinder image-metadata "$VOL_NAME" set hw_disk_bus=virtio
 else
     cinder image-metadata "$VOL_NAME" set os_type=linux
+    cinder image-metadata "$VOL_NAME" set hw_disk_bus=scsi
 fi
 
 rm -f "$CONVERTED"
