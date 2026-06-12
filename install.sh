@@ -10,18 +10,26 @@ else
     cubectl node -r control exec -p "rm /usr/share/virtio-win/*.iso"
     cp ./virtio-win-0.1.285.iso /usr/share/virtio-win/virtio-win.iso
     cubectl node -r control rsync /usr/share/virtio-win/virtio-win.iso
+    cp rpm/virt-v2v-2.7.1-12.el9.x86_64.rpm /tmp/.
+    cubectl node rsync /tmp/virt-v2v-2.7.1-12.el9.x86_64.rpm
+    cubectl node -r control exec -p "dnf remove -y virt-v2v"
+    cubectl node -r control exec -p "dnf localinstall -y /tmp/virt-v2v-2.7.1-12.el9.x86_64.rpm"
 
     # 2. 複製 ext-* 工具
     echo "[INFO] Copying ext-* tools to /usr/local/bin..."
     cp ./ext-* /usr/local/bin/
     git add /usr/local/bin/ext-*
     hex_sdk git_push "Add support-ext-pack"
-    
-    # 3. update flavors
+
+    # 3. update admin quota unlimit
+    echo "[INFO] Update admin quota to unlimited"
+    openstack quota set --cores -1 --ram -1 --instances -1 --volumes -1 --gigabytes -1 --key-pairs -1 admin
+
+    # 4. update flavors
     echo "[INFO] Update OPSTK flavor"
     openstack flavor delete pgpu.example
     openstack flavor delete vgpu.example
-    openstack flavor delete t2.micro
+    openstack flavor delete t2.micr
     openstack flavor delete t2.pico
     openstack flavor delete t2.nano
     openstack flavor create --vcpus 8 --ram 8192 --disk 200 --property hw:cpu_cores=8 --public appfw.medium
@@ -56,28 +64,33 @@ else
     openstack flavor create --vcpus 16 --ram 16384 --disk 80 --property hw:cpu_threads=2 --property hw:cpu_cores=8 --public basic.xlarge
     openstack flavor create --vcpus 32 --ram 32768 --disk 80 --property hw:cpu_threads=2 --property hw:cpu_cores=16 --public basic.2xlarge
 
-    # 4. Override number of enabled pcie ports & enable swtpm for libvirt
+    # 5. Override number of enabled pcie ports & enable swtpm for libvirt
     echo "[INFO] Override number of enabled pcie ports & enable swtpm for libvirt"
     mkdir -p /etc/nova/nova.d/
     cp ./override/custom-nova.conf /etc/nova/nova.d/custom.conf
     cubectl node -r compute rsync /etc/nova/nova.d/custom.conf
     cubectl node -r compute exec -p "hex_config restart_nova"
 
-    # 5. update rabbitmq configuration
+    # 6. update rabbitmq configuration
     mkdir -p /etc/systemd/system/rabbitmq-server.service.d
     cp ./override/custom-rabbitmq.conf /etc/systemd/system/rabbitmq-server.service.d/custom.conf
     cubectl node -r control rsync /etc/systemd/system/rabbitmq-server.service.d/custom.conf
     cubectl node -r control exec -p "systemctl daemon-reload"
     cubectl node -r control exec -p "systemctl restart rabbitmq-server"
 
-    # 6. update rabbitmq configuration
+    # 7. update rabbitmq configuration
     sed -i 's/os_type=windows/os_type=windows --property hw_disk_bus=virtio/g' /usr/lib/hex_sdk/modules/sdk_os.sh
     git add /usr/lib/hex_sdk/modules/sdk_os.sh
     hex_sdk git_push "Fix missing virtio disk bus property for windows image"
 
-    # 7. Create marker file to indicate the installation is done
+    # 8. Create marker file to indicate the installation is done
     echo "[INFO] Marking installation as done..." > /etc/appliance/state/install_support_ext_pack_done
     cubectl node -r control rsync /etc/appliance/state/install_support_ext_pack_done
+
+    # 9. add rke2 generator
+    cp ./rke2_generator /usr/local/bin/
+    git add /usr/local/bin/rke2_generator
+    hex_sdk git_push "add rke2 generator"
 fi
 
 ./hotfix.sh
