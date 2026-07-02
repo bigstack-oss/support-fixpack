@@ -29,7 +29,7 @@
     openstack flavor create --vcpus 4 --ram 4096 --disk 80 --property hw:cpu_cores=4 --public b80.small
     openstack flavor create --vcpus 8 --ram 8192 --disk 80 --property hw:cpu_cores=8 --public b80.medium
     openstack flavor create --vcpus 4 --ram 8192 --disk 80 --property hw:cpu_cores=8 --public k8s.small
-    openstack flavor create --vcpus 8 --ram 16384 --disk 80 --property hw:cpu_threads=2 --property hw:cpu_cores=4 --public k8s.medium
+    openstack flavor create --vcpus 8 --ram 16384 --disk 80 --property hw:cpu_cores=8 --public k8s.medium
     openstack flavor create --vcpus 16 --ram 32768 --disk 80 --property hw:cpu_threads=2 --property hw:cpu_cores=8 --public k8s.large
     openstack flavor create --vcpus 2 --ram 2048 --disk 80 --property hw:cpu_cores=2 --public basic.small
     openstack flavor create --vcpus 4 --ram 4096 --disk 80 --property hw:cpu_cores=4 --public basic.medium
