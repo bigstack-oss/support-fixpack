@@ -59,5 +59,3 @@ else
     git add /usr/local/bin/rke2-generator
     hex_sdk git_push "add rke2 generator"
 fi
-
-./hotfix.sh
