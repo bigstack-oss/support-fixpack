@@ -5,6 +5,7 @@ if [ -f "/etc/appliance/state/install_support_ext_pack_done" ]; then
     echo "[INFO] Support ext pack already installed, skipping..."
     exit 1
 else
+    node=$(cubectl node list | wc -l)
     # 1. 更新 virtio-win driver v285
     echo "[INFO] Mounting ISO to /usr/share/virtio-win..."
     cubectl node -r control exec -p "rm /usr/share/virtio-win/*.iso"
@@ -18,14 +19,18 @@ else
     # 2. 複製 ext-* 工具
     echo "[INFO] Copying ext-* tools to /usr/local/bin..."
     cp ./ext-* /usr/local/bin/
-    git add /usr/local/bin/ext-change-port-ip
-    git add /usr/local/bin/ext-change-route-ip
-    git add /usr/local/bin/ext-change-vm-pass
-    git add /usr/local/bin/ext-image-config
-    git add /usr/local/bin/ext-snapshot-restore
-    git add /usr/local/bin/ext-volume-config
-    git add /usr/local/bin/ext-volume-migrate
-    hex_sdk git_push "Add support-ext-pack"
+    cp ./rke2-generator /usr/local/bin/
+    if (( node > 1 )); then
+        git add /usr/local/bin/ext-change-port-ip
+        git add /usr/local/bin/ext-change-route-ip
+        git add /usr/local/bin/ext-change-vm-pass
+        git add /usr/local/bin/ext-image-config
+        git add /usr/local/bin/ext-snapshot-restore
+        git add /usr/local/bin/ext-volume-config
+        git add /usr/local/bin/ext-volume-migrate
+        git add /usr/local/bin/rke2-generator
+        hex_sdk git_push "Add support-ext-pack"
+    fi
 
     # 3. update admin quota unlimit
     echo "[INFO] Update admin quota to unlimited"
@@ -47,17 +52,19 @@ else
 
     # 6. update rabbitmq configuration
     sed -i 's/os_type=windows/os_type=windows --property hw_disk_bus=virtio/g' /usr/lib/hex_sdk/modules/sdk_os.sh
-    git add /usr/lib/hex_sdk/modules/sdk_os.sh
-    hex_sdk git_push "Fix missing virtio disk bus property for windows image"
+    if (( node > 1 )); then
+        git add /usr/lib/hex_sdk/modules/sdk_os.sh
+        hex_sdk git_push "Fix missing virtio disk bus property for windows image"
+    fi
 
     # 7. Create marker file to indicate the installation is done
     echo "[INFO] Marking installation as done..." > /etc/appliance/state/install_support_ext_pack_done
     cubectl node -r control rsync /etc/appliance/state/install_support_ext_pack_done
 
-    # 8. add rke2 generator
-    cp ./rke2-generator /usr/local/bin/
-    git add /usr/local/bin/rke2-generator
-    hex_sdk git_push "add rke2 generator"
+    # reload
+    cubectl node rsync /root/.bashrc
+    source /root/.bashrc
+
 fi
 
 ./hotfix.sh
