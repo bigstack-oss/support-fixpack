@@ -1,7 +1,4 @@
-for node in $(cubectl node list -r compute | awk -F',' '{print $1}'); do
-    echo "=== Deploying to $node ==="
-    ssh $node << 'EOF'
-
+# Extract UUID once locally before the loop
 if [ ! -f /etc/cinder/cinder.conf ]; then
     echo "Error: /etc/cinder/cinder.conf not found on $HOSTNAME"
     exit 1
@@ -15,6 +12,12 @@ if [ -z "$UUID" ]; then
 fi
 echo "Found UUID: $UUID"
 
+# Loop through compute nodes and pass $UUID into each SSH session
+for node in $(cubectl node list -r compute | awk -F',' '{print $1}'); do
+    echo "=== Deploying to $node ==="
+    
+    ssh "$node" UUID="$UUID" 'bash -s' << 'EOF'
+
 if virsh secret-list | grep -E -q "($UUID)"; then
     echo "Secret already exists on $HOSTNAME. Skipping..."
     exit 0
@@ -25,7 +28,7 @@ cat <<SECRETOF | virsh secret-define --file /dev/stdin
 <secret ephemeral='no' private='no'>
   <uuid>${UUID}</uuid>
   <usage type='ceph'>
-    <name>client.admin secret</name>
+    <name>localhost client.admin secret</name>
   </usage>
 </secret>
 SECRETOF
